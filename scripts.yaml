@@ -1,0 +1,31 @@
+new_script:
+  alias: home_leave
+  sequence:
+  - service: homeassistant.turn_off
+    target:
+      entity_id:
+      - light.all_lights
+    data: {}
+  - service: media_player.play_media
+    data:
+      media_content_type: custom
+      media_content_id: set Downstairs Thermostat to off
+    target:
+      entity_id: media_player.kitchen_echo_show
+  - service: media_player.play_media
+    data:
+      media_content_type: custom
+      media_content_id: set Bedroom Thermostat to off
+    target:
+      entity_id: media_player.kitchen_echo_show
+  - if:
+    - condition: sun
+      after: sunset
+    then:
+    - service: light.turn_on
+      data: {}
+      target:
+        entity_id:
+        - light.dining_room
+        - light.living_room_1
+  mode: single

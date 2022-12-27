@@ -1,0 +1,12 @@
+settings:
+  variables:
+    entity_tablet: switch.fire_tablet_screensaver
+    entity_browser_mod: media_player.tablet
+    translate_unknown: Not sure
+    translate_idle: Inactive
+    translate_home: Home
+    translate_not_home: Away
+    translate_available: Available
+    translate_no_updates: No Updates
+    translate_update_available: Update Available
+    translate_updates_available: Updates Available

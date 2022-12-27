@@ -1,0 +1,49 @@
+climate:
+    template: ['base']
+    aspect_ratio: 1/1
+    show_state: true
+    show_icon: false
+    show_name: true
+    show_current_temperature: true
+    show_control: true
+    state:
+      - value: 'heat'
+        styles:
+          card: [background-color: 'rgba(255, 255, 255, 0.8)']
+          name: [color: 'rgba(0, 0, 0, 0.6)']
+          state: [color: 'rgba(0, 0, 0, 0.6)']
+    tap_action:
+      action: more-info
+    custom_fields:
+      circle_current: >
+        [[[ {
+        const temperature = entity.attributes.current_temperature;
+        const stroke_color = entity.state === 'heat' ? '#b2b2b2' : '#313638'; 
+        const fill_color = entity.state === 'heat' ? '#00ba32' : '#FFFFFF08';
+        const radius = 30;
+        return `<svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="${radius}" stroke="${stroke_color}" stroke-width="1.5" fill="${fill_color}" style="
+        transform: rotate(-90deg); transform-origin: 50% 50%; " />
+        <text x="50%" y="54%" fill="#f7f8fa" font-size="18" text-anchor="middle" alignment-baseline="middle">${temperature}<tspan font-size="10">°</tspan></text></svg>`; } ]]]
+      circle_target: >
+        [[[ if (entity.state === 'heat' && entity.attributes.temperature) {
+        const temperature = entity.attributes.temperature;
+        const stroke_color = entity.state === 'heat' ? '#b2b2b2' : '#313638'; 
+        const fill_color = entity.state === 'heat' ? 'none' : '#FFFFFF08';
+        const radius = 20.5;
+        return `<svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="${radius}" stroke="${stroke_color}" stroke-width="1.5" fill="${fill_color}" style="
+        transform: rotate(-90deg); transform-origin: 50% 50%; " />
+        <text x="50%" y="54%" fill="#8d8e90" font-size="14" text-anchor="middle" alignment-baseline="middle">${temperature}<tspan font-size="10">°</tspan></text></svg>`; } ]]]
+    styles:
+      name:
+        [top: 57.7%, left: 11%, line-height: 2vw, position: absolute]
+      state:
+        [top: 74%, left: 11%, line-height: 2vw, position: absolute]
+      card:
+        [font-family: Sf Display, letter-spacing: 0.05vw, font-weight: 400, color: 'rgba(255, 255, 255, 0.3)', font-size: 1.34vw, background-color: 'rgba(115, 115, 115, 0.2)', border-radius: 0.8vw, box-shadow: none, transition: none]
+      custom_fields:
+        circle_target: 
+          [top: 8.5%, left: 54.5%, width: 3.5vw, position: absolute, letter-spacing: 0.03vw]
+        circle_current: 
+          [top: 6.5%, left: 6%, width: 3.5vw, position: absolute, letter-spacing: 0.03vw]
+
+

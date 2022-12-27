@@ -1,0 +1,203 @@
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+    #logger:
+    # default: critical
+    #logs:
+    #custom_components.alexa_media: debug
+# for API debugging (verbose and intended for service debugging)
+#alexapy: debug
+# for proxy debugging
+#   authcaptureproxy: debug
+
+automation: !include automations.yaml
+scene: !include scenes.yaml
+script: !include scripts.yaml
+frontend: !include themes.yaml
+template: !include sidebar.yaml
+#packages: !include_dir_named packages
+
+sensor:
+  - platform: plex_recently_added
+    port: !secret plex_port
+    token: !secret plex_token
+    max: 1
+    img_dir: /
+    image_resolution: 800
+  - platform: time_date
+    display_options:
+      - time
+      - date
+
+  - platform: systemmonitor
+    resources:
+      - type: disk_use_percent
+        arg: /
+      - type: memory_use_percent
+      - type: processor_use
+      - type: last_boot
+    scan_interval: 120
+
+monitor_docker:
+  - name: Docker
+    containers:
+      - scrypted
+      - home-assistant
+      - transmission
+      - sonarr
+      - plex
+      - mediasetup_transmission-openvpn_1
+
+    monitored_conditions: allinone
+    scan_interval: 900
+
+lovelace:
+  mode: yaml
+  resources:
+    [
+      { url: /hacsfiles/apexcharts-card/apexcharts-card.js,                         type: module },
+      { url: /hacsfiles/bar-card/bar-card.js,                                       type: module },
+      { url: /hacsfiles/button-card/button-card.js,                                 type: module },
+      { url: /hacsfiles/custom-icons/custom-icons.js,                               type: module },
+      { url: /hacsfiles/lovelace-layout-card/layout-card.js,                        type: module },
+      { url: /hacsfiles/lovelace-more-info-card/more-info-card.js,                  type: module },
+      { url: /hacsfiles/lovelace-mushroom/mushroom.js,                              type: module },
+      { url: /hacsfiles/lovelace-slider-entity-row/slider-entity-row.js,            type: module },
+      { url: /hacsfiles/swipe-card/swipe-card.js,                                   type: module },
+      { url: /hacsfiles/tabbed-card/tabbed-card.js,                                 type: module },
+      { url: /local/thermostat-popup-card.js,                                       type: module },
+      { url: /hacsfiles/platinum-weather-card/platinum-weather-card.js,             type: module },
+      { url: '/local/marked.min.js?v=4.2.1',                                        type: module },
+      { url: '/local/vanilla-tilt.min.js?v=1.7.3',                                  type: module },
+      { url: '/local/browser_mod_icon.js?v=0.5',                                    type: module },
+      { url: '/local/fonts.css?v=2.1',                                              type: css }
+    ]
+
+climate:
+  - platform: generic_thermostat
+    name: Bedroom Thermostat
+    heater: input_boolean.bedroom_temperature
+    target_sensor: sensor.bedroom_temperature
+    initial_hvac_mode: "off"
+    ac_mode: false
+    min_temp: 50
+    max_temp: 72
+  - platform: generic_thermostat
+    name: Downstairs Thermostat
+    heater: input_boolean.temperature
+    target_sensor: sensor.thermostat_temperature
+    initial_hvac_mode: "off"
+    ac_mode: false
+    min_temp: 50
+    max_temp: 72
+
+
+input_select:
+  washing_machine_status:
+    name: Washing Machine Status
+    options:
+      - Idle
+      - Running
+      - Finishing
+      - Clean
+    initial: Idle
+
+# for purging database everynight
+recorder:
+
+# for LG TV
+wake_on_lan:
+
+input_boolean:
+  james_present:
+    name: James
+    icon: mdi:account
+  danielle_present:
+    name: Danielle
+    icon: mdi:account
+
+
+device_tracker:
+  - platform: iphonedetect
+    consider_home: 60
+    new_device_defaults:
+      track_new_devices: true
+    hosts:
+      james_iphone: 192.168.1.212
+
+homekit:
+  - name: HASS
+    port: 21063
+    filter:
+      include_domains:
+        - alarm_control_panel
+        - light
+      include_entities:
+        # CONTACT SENSORS
+        - binary_sensor.front_door_sensor_intrusion
+        - binary_sensor.side_door_sensor_intrusion
+        - binary_sensor.back_door_sensor_intrusion
+        - binary_sensor.dining_room_window_intrusion
+        - binary_sensor.fence_gate_driveway_intrusion
+        - binary_sensor.side_gate_patio_intrusion
+        - binary_sensor.basement_inside_door_intrusion
+        - binary_sensor.living_room_window_intrusion
+        # LOCKS
+        - lock.touchpad_electronic_deadbolt
+        # PEOPLE
+        - input_boolean.james_present
+        # SWITCHES / SHELLY
+        - light.back_yard
+        - light.basement
+        # TVS
+        - media_player.living_room_fire_tv
+        # SLEEP MODE SWITCH
+        - switch.adaptive_lighting_sleep_mode_bedroom
+        - switch.adaptive_lighting_sleep_mode_living_room
+        # THERMOSTATS
+        - climate.bedroom_thermostat
+        - climate.downstairs_thermostat
+        # CHRISTMAS
+        - switch.christmas_group
+      exclude_entity_globs:
+        - light.*group
+        - light.*screen
+      exclude_entities:
+        - light.all_lights
+
+
+    entity_config:
+      alarm_control_panel.alarmo:
+        code: !secret alarm_code
+      binary_sensor.living_room_window_intrusion:
+        linked_battery_sensor: sensor.living_room_window_battery_level
+      binary_sensor.front_door_sensor_intrusion:
+        linked_battery_sensor: sensor.front_door_sensor_battery_level
+      binary_sensor.side_door_sensor_intrusion:
+        linked_battery_sensor: sensor.side_door_sensor_battery_level
+      binary_sensor.back_door_sensor_intrusion:
+        linked_battery_sensor: sensor.back_door_sensor_battery_level
+      binary_sensor.dining_room_window_intrusion:
+        linked_battery_sensor: sensor.dining_room_window_battery_level
+      binary_sensor.side_gate_patio_intrusion:
+        linked_battery_sensor: sensor.side_gate_patio_battery_level
+      binary_sensor.basement_inside_door_intrusion:
+        linked_battery_sensor: sensor.basement_inside_door_battery_level
+      binary_sensor.fence_gate_driveway_intrusion:
+        linked_battery_sensor: sensor.fence_gate_driveway_battery_level
+      lock.touchpad_electronic_deadbolt:
+        linked_battery_sensor: sensor.touchpad_electronic_deadbolt_battery_level
+
+
+
+alexa_media:
+  accounts:
+  - email: !secret alexa_email
+    password: !secret alexa_pw
+    url: amazon.com
+

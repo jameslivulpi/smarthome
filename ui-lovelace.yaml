@@ -1,0 +1,697 @@
+button_card_templates:
+  !include_dir_merge_named button_card_templates
+
+views:
+  - type: custom:grid-layout
+    title: Home
+    layout:
+      #default
+      margin: 0
+      grid-gap: var(--custom-layout-card-padding)
+      grid-template-columns: repeat(4, 1fr) 0
+      grid-template-rows: 0 repeat(2, fit-content(100%)) 0fr
+      grid-template-areas: |
+        "sidebar  .           .       .       ."
+        "sidebar  vardagsrum  studio  sovrum  ."
+        "sidebar  media       övrigt hemma  ."
+        "sidebar  cam         climate .      ."
+        "sidebar  footer      footer  footer  ."
+      mediaquery:
+        #phone
+        "(max-width: 800px)":
+          grid-gap: calc(var(--custom-layout-card-padding) * 1.7)
+          grid-template-columns: 0 repeat(2, 1fr) 0
+          grid-template-rows: 0 repeat(5, fit-content(100%)) 0fr
+          grid-template-areas: |
+            ".  .           .        ."
+            ".  sidebar     sidebar  ."
+            ".  vardagsrum  sovrum   ."
+            ".  studio      övrigt  ."
+            ".  media       hemma    ."
+            ".  cam         climate  ."
+            ".  footer      footer   ."
+            ".  .           .        ."
+        #portrait
+        "(max-width: 1200px)":
+          grid-gap: var(--custom-layout-card-padding)
+          grid-template-columns: repeat(3, 1fr) 0
+          grid-template-rows: 0 repeat(3, fit-content(100%)) 0fr
+          grid-template-areas: |
+            "sidebar  .           .       ."
+            "sidebar  vardagsrum  sovrum  ."
+            "sidebar  studio      övrigt ."
+            "sidebar  media       hemma   ."
+            "sidebar  cam         climate ."
+            "sidebar  footer      footer  ."
+            "sidebar  .           .       ."
+    cards:
+
+      #extra_styles fix, do not remove
+      #also warn if theme is not set
+
+      - type: custom:button-card
+        view_layout:
+          grid-area: 1 / 2 / 2 / 5
+        name: SET THEME TO "tablet" IN PROFILE
+        tap_action:
+          action: navigate
+          navigation_path: /profile
+        styles:
+          card:
+            - display: >
+                [[[
+                  return hass.themes.theme === 'tablet'
+                      ? 'none'
+                      : 'initial';
+                ]]]
+          name:
+            - z-index: 1
+            - overflow: visible
+            - color: red
+            - font-weight: bolder
+            - font-size: xxx-large
+            - background: yellow
+
+      #################################################
+      #                                               #
+      #                    SIDEBAR                    #
+      #                                               #
+      #################################################
+
+      - type: vertical-stack
+        view_layout:
+          grid-area: sidebar
+        cards:
+
+          - type: custom:button-card
+            entity: sensor.template_sidebar
+            template: sidebar
+
+          - type: custom:platinum-weather-card
+            title: Weather
+            card_config_version: 8
+            entity_apparent_temp: sensor.home_realfeel_temperature
+            entity_forecast_icon: weather.home
+            entity_forecast_icon_1: weather.home
+            entity_forecast_max: weather.home
+            entity_forecast_max_1: weather.home
+            entity_forecast_min: weather.home
+            entity_forecast_min_1: weather.home
+            entity_humidity: weather.home
+            entity_pop: weather.home
+            entity_pop_1: weather.home
+            entity_pos: weather.home
+            entity_pos_1: weather.home
+            entity_pressure: weather.home
+            entity_summary: weather.home
+            entity_summary_1: weather.home
+            entity_sun: sun.sun
+            entity_temperature: weather.home
+            entity_uv_alert_summary: sensor.home_uv_index
+            entity_wind_bearing: weather.home
+            entity_wind_gust: sensor.home_wind
+            entity_wind_speed: weather.home
+            extended_name_attr: state_class
+            extended_use_attr: false
+            option_show_overview_decimals: false
+            option_show_overview_separator: false
+            option_static_icons: false
+            option_time_format: 12hour
+            overview_layout: complete
+            section_order:
+              - overview
+              - extended
+              - slots
+              - daily_forecast
+            show_section_daily_forecast: true
+            show_section_extended: true
+            show_section_overview: true
+            show_section_slots: true
+            slot_l1: forecast_max
+            slot_l2: forecast_min
+            slot_l3: wind
+            slot_l4: pressure
+            slot_l5: sun_next
+            slot_l6: remove
+            slot_l7: remove
+            slot_l8: remove
+            slot_r1: popforecast
+            slot_r2: humidity
+            slot_r3: uv_summary
+            slot_r4: remove
+            slot_r5: sun_following
+            slot_r6: remove
+            slot_r7: remove
+            slot_r8: remove
+            update_time_use_attr: true
+            tap_action: more-info
+            template: base
+
+          - type: conditional
+            conditions:
+              - entity: input_boolean.washing_machine_done
+                state: 'on'
+            card:
+              type: custom:button-card
+              show_name: false
+              show_label: true
+              show_icon: true
+              label: Washing Machine Complete
+              entity: input_boolean.washing_machine_done
+              double_tap_action:
+                action: call-service
+                confirmation:
+                  text: Laundry is unloaded?
+                service: input_boolean.turn_off
+                service_data:
+                  entity_id: input_boolean.washing_machine_done
+
+      #################################################
+      #                                               #
+      #                  Living ROOM /VARDAGSRUM                   #
+      #                                               #
+      #################################################
+
+      - type: grid
+        title: Living Room
+        view_layout:
+          grid-area: vardagsrum
+        columns: 2
+        cards:
+
+          - type: custom:button-card
+            entity: light.living_room_group
+            name: Lighting
+            template:
+              - light
+              - icon_hue
+
+          - type: custom:button-card
+            entity: light.living_room_1
+            name: Lamp
+            template:
+              - light
+              - icon_shade
+
+          - type: custom:button-card
+            entity: light.living_room_2
+            name: Edison Lamp
+            template:
+              - base
+              - icon_shade
+
+          - type: custom:button-card
+            entity: media_player.living_room_fire_tv
+            name: TV
+            state_display: >
+              [[[
+                if (variables.state === 'playing') {
+                    return 'Playing';
+                }
+                if (variables.state === true) {
+                    return variables.translate_unknown;
+                }
+              ]]]
+          #  double_tap_action:
+          #    !include popup/vardagsrum_tv.yaml
+            template:
+              - base
+              - icon_tv
+              - loader
+
+          - type: custom:button-card
+            entity: switch.christmas_group
+            name: Christmas
+            template:
+              - base
+              - icon_christmas
+
+
+      #################################################
+      #                                               #
+      #                    STUDIO/kitchen                     #
+      #                                               #
+      #################################################
+
+      - type: grid
+        title: Kitchen
+        view_layout:
+          grid-area: studio
+        columns: 2
+        cards:
+          - type: custom:button-card
+            entity: light.kitchen_light_group
+            name: Lighting
+            template:
+              - light
+              - icon_pendant
+          - type: custom:button-card
+            entity: light.shelly_kitchen
+            name: Lighting
+            template:
+              - base
+              - icon_recessed
+          - type: custom:button-card
+            entity: media_player.kitchen_echo_show
+            name: "Country Radio"
+            tap_action:
+              action: call-service
+              service: media_player.play_media
+              service_data:
+                  media_content_id: Country Radio
+                  media_content_type: APPLE_MUSIC
+                  entity_id:
+                    - media_player.kitchen_echo_show
+            template:
+              - base
+              - icon_apple_music
+              - loader
+
+      #################################################
+      #                                               #
+      #                    SOVRUM/ BEDROOM                     #
+      #                                               #
+      #################################################
+
+      - type: grid
+        title: Bedroom
+        view_layout:
+          grid-area: sovrum
+        columns: 2
+        cards:
+
+          - type: custom:button-card
+            entity: light.bedroom_light_group
+            name: Bedroom Lights
+            template:
+              - light
+              - icon_lamp
+
+          - type: custom:button-card
+            entity: media_player.bedroom_fire_tv
+            name: "TV"
+            double_tap_action:
+              !include popup/sovrum_tv2.yaml
+            template:
+              - base
+              - icon_tv
+              - loader
+
+
+          - type: custom:button-card
+            entity: media_player.bedroom_dot
+            name: "Country Radio"
+            double_tap_action:
+              action: call-service
+              service: media_player.play_media
+              service_data:
+                  media_content_id: Country Radio
+                  media_content_type: APPLE_MUSIC
+                  entity_id:
+                    - media_player.bedroom_dot
+            template:
+              - base
+              - icon_apple_music
+              - loader
+
+      #################################################
+      #                                               #
+      #                     MEDIA                     #
+      #                                               #
+      #################################################
+
+      - type: grid
+        title: Media
+        view_layout:
+          grid-area: media
+        columns: 1
+        cards:
+
+          - type: custom:swipe-card
+            parameters:
+              speed: 550
+              spaceBetween: 40
+              threshold: 5
+            cards:
+
+              - type: horizontal-stack
+                cards:
+
+                  - type: conditional
+                    conditions:
+                      - entity: select.conditional_media
+                        state_not: Vardagsrum
+
+                      - entity: select.conditional_media
+                        state_not: Sovrum
+
+                      - entity: select.conditional_media
+                        state_not: Spotify
+
+                      - entity: select.conditional_media
+                        state_not: Kök
+                    card:
+                      type: custom:button-card
+                      entity: sensor.plex_recently_added
+                      name: Added Recently
+                      tap_action:
+                        action: none
+                      template:
+                        - conditional_media
+                        - icon_plex
+
+
+
+      #################################################
+      #                                               #
+      #                    ÖVRIGT          OFFICE           #
+      #                                               #
+      #################################################
+
+      - type: grid
+        title: Office/Hallway
+        view_layout:
+          grid-area: övrigt
+        columns: 2
+        cards:
+
+          - type: custom:button-card
+            entity: light.office_lamp_edison
+            name: Office Edison
+            template:
+              - light
+              - icon_lamp
+
+          - type: custom:button-card
+            entity: light.office_2
+            name: Office Lamp
+            template:
+              - base
+              - icon_lamp
+
+          - type: custom:button-card
+            entity: light.upstairs_hallway
+            name: Hall
+            template:
+              - light
+              - icon_spot
+
+          - type: custom:button-card
+            entity: media_player.office_tv
+            name: "TV"
+            double_tap_action:
+              !include popup/sovrum_tv2.yaml
+            template:
+              - base
+              - icon_tv
+              - loader
+
+      #################################################
+      #                                               #
+      #                     Home                     #
+      #                                               #
+      #################################################
+
+      - type: grid
+        title: Home
+        view_layout:
+          grid-area: hemma
+        columns: 1
+        cards:
+          - type: custom:swipe-card
+            start_card: 2
+            parameters:
+              effect: 'coverflow'
+              grabCursor: true
+              centeredSlides: true
+              slidesPerView: 2
+              coverflowEffect:
+                rotate: 50
+                stretch: 0
+                depth: 100
+                modifier: 1
+                slideShadows : true
+            cards:
+              - type: custom:button-card
+                entity: person.james
+                name: James
+                triggers_update:
+                  - sensor.james_last_changed
+                double_tap_action:
+                  !include popup/hemma_mattias.yaml
+                variables:
+                  retain: sensor.james_last_changed
+                template:
+                  - person
+                  - circle
+
+              - type: custom:button-card
+                entity: person.danielle
+                name: Danielle
+                triggers_update:
+                  - sensor.danielle_last_changed
+                double_tap_action:
+                  !include popup/hemma_sanja.yaml
+                variables:
+                  retain: sensor.danielle_last_changed
+                template:
+                  - person
+                  - circle
+
+              - type: custom:button-card
+                entity: lock.touchpad_electronic_deadbolt
+                name: Lock
+                template:
+                  - base
+                  - loader
+                  - icon_lock
+
+              - type: custom:button-card
+                entity: script.home_leave
+                name: Away
+                template:
+                  - base
+                  - icon_away
+
+              - type: custom:button-card
+                entity: script.home_arrive
+                name: Home
+                template:
+                  - base
+                  - icon_home
+
+
+  #################################################
+      #                                               #
+      #                     Security                     #
+      #                                               #
+      #################################################
+      - type: grid
+        title: Security
+        view_layout:
+          grid-area: cam
+        columns: 2
+        cards:
+          - type: custom:button-card
+            camera_view: auto
+            type: picture-glance
+            title: Entrance
+            image: >-
+              http://192.168.1.4:11080/endpoint/@scrypted/webhook/public/14/e8b256ab10a13714/takePicture
+            entities:
+              - entity: camera.entrance
+            camera_image: camera.entrance
+            tap_action:
+              action: more-info
+
+          - type: custom:button-card
+            camera_view: auto
+            type: picture-glance
+            title: Backyard
+            image: >-
+              http://192.168.1.4:11080/endpoint/@scrypted/webhook/public/36/2337f4793224b2dc/takePicture
+            entities:
+              - entity: camera.backyard
+            camera_image: camera.backyard
+            tap_action:
+              action: more-info
+
+          - type: custom:button-card
+            entity: alarm_control_panel.alarmo
+            aspect_ratio: 1/1
+            show_entity_picture: true
+            show_state: true
+            show_name: false
+            name: Alarm
+            show_icon: true
+            style:
+              - padding: 0px
+            styles:
+              entity_picture:
+                - width: 80%
+                - height: 100%
+                - padding-bottom: 0%
+              card:
+                - border-radius: 10%
+                - background-color: 'rgba(115, 115, 115, 0.2)'
+            icon: mdi:shield-off-outline
+            tap_action:
+              !include popup/alarm.yaml
+            state:
+              - value: 'arming'
+                icon: mdi:shield-outline
+                styles:
+                  card:
+                    - animation: blink 3s ease infinite
+                    - background-color: '#FAA255'
+              - value: 'armed_away'
+                icon: mdi:shield-lock
+                styles:
+                  card:
+                    - background-color: '#BA494B'
+              - value: 'armed_home'
+                icon: mdi:shield-account
+                styles:
+                  card:
+                    - background-color: '#F0C438'
+              - value: 'armed_night'
+                icon: mdi:shield-home
+                styles:
+                  card:
+                    - background-color: '#66C6F2'
+              - value: 'armed_custom_bypass'
+                icon: mdi:security
+                styles:
+                  card:
+                    - background-color: '#7F7CE6'
+              - value: 'pending'
+                icon: mdi:shield-sync
+                styles:
+                  card:
+                    - animation: blink 4s ease infinite
+                    - background-color: '#FAA255'
+              - value: 'triggered'
+                icon: mdi:bell-ring
+                styles:
+                  card:
+                    - animation: blink 1s ease infinite
+                    - background-color: '#f70d1a'
+              - value: 'unavailable'
+                icon: mdi:shield-alert
+                styles:
+                  card:
+                    - animation: blink 10s ease infinite
+                    - background-color: '#657c80'
+              - value: 'unknown'
+                icon: mdi:shield-alert
+                styles:
+                  card:
+                    - animation: blink 10s ease infinite
+                    - background-color: '#6f8499'
+
+      #################################################
+      #                                               #
+      #                     Climate                     #
+      #                                               #
+      #################################################
+      - type: grid
+        title: Climate
+        view_layout:
+          grid-area: climate
+        columns: 2
+        cards:
+          - type: custom:button-card
+            entity: climate.downstairs_thermostat
+            name: Downstairs
+            double_tap_action:
+              !include popup/downstairs_climate.yaml
+            template:
+              - base
+              - icon_climate
+              - circle
+            variables:
+              circle_input: >
+                [[[
+                  if (entity) {
+                      return entity.state === 'heat'
+                          ? Math.round(entity.attributes.temperature).toString()
+                          : Math.round(entity.attributes.current_temperature).toString();
+                  }
+                ]]]
+              circle_input_unit: '°F'
+
+          - type: custom:button-card
+            entity: climate.bedroom_thermostat
+            name: Upstairs
+            double_tap_action:
+              !include popup/upstairs_climate.yaml
+            template:
+              - base
+              - icon_climate
+              - circle
+            variables:
+              circle_input: >
+                [[[
+                  if (entity) {
+                      return entity.state === 'heat'
+                          ? Math.round(entity.attributes.temperature).toString()
+                          : Math.round(entity.attributes.current_temperature).toString();
+                  }
+                ]]]
+              circle_input_unit: '°F'
+
+
+
+
+
+      #################################################
+      #                                               #
+      #                    FOOTER                     #
+      #                                               #
+      #################################################
+
+      - type: horizontal-stack
+        view_layout:
+          grid-area: footer
+        cards:
+
+          - type: custom:button-card
+            name: >
+              <ha-icon icon="mdi:server"></ha-icon> COMPUTE
+            tap_action:
+              !include popup/footer_nas.yaml
+            template: footer
+
+         # - type: custom:button-card
+         #   entity: sensor.template_updates
+         #   name: >
+         #     <ha-icon icon="mdi:arrow-up-bold-circle-outline"></ha-icon> Uppdatera
+         #   tap_action:
+         #     !include popup/footer_updates.yaml
+         #   variables:
+         #     notify: >
+         #       [[[
+         #         return parseInt(entity?.state);
+         #       ]]]
+         #   template: footer
+
+          - type: custom:button-card
+            name: >
+              <ha-icon icon="mdi:chart-line-variant"></ha-icon> History
+            tap_action:
+              !include popup/footer_history.yaml
+            template: footer
+
+#          - type: custom:button-card
+#            name: >
+#              <ha-icon icon="mdi:tablet"></ha-icon> Platta
+#            tap_action:
+#              !include popup/footer_tablet.yaml
+#            variables:
+#              notify: >
+#                [[[
+#                  let id = states['binary_sensor.galaxy_tab_a_plugged_in'];
+#                  if (id) return id.state === 'off';
+#                ]]]
+#            template: footer
+

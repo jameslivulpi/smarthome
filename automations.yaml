@@ -1,0 +1,495 @@
+- id: '1666480569957'
+  alias: Door Alert
+  description: ''
+  trigger:
+  - type: opened
+    platform: device
+    device_id: 6a9c0014ad551d05da018f2307b8ebd1
+    entity_id: binary_sensor.front_door_sensor_intrusion
+    domain: binary_sensor
+    id: front
+  - type: opened
+    platform: device
+    device_id: 35aed87fc59cf40f9864e78793fa4958
+    entity_id: binary_sensor.side_door_sensor_intrusion
+    domain: binary_sensor
+    id: side
+  - type: opened
+    platform: device
+    device_id: 7f76ae04a6600c07ef67332fa8775b50
+    entity_id: binary_sensor.back_door_sensor_intrusion
+    domain: binary_sensor
+    id: back
+  condition:
+  - condition: template
+    value_template: '{{ now() - state_attr(this.entity_id, ''last_triggered'') > timedelta(minutes=15)
+      }}'
+    enabled: true
+  action:
+  - if:
+    - condition: trigger
+      id: front
+    then:
+    - service: media_player.volume_set
+      data:
+        volume_level: 0.4
+      target:
+        entity_id: media_player.living_room_echo
+    - service: media_player.play_media
+      target:
+        entity_id: media_player.living_room_echo
+      data:
+        media_content_type: sound
+        media_content_id: amzn_sfx_doorbell_chime_02
+    - service: notify.alexa_media
+      data:
+        message: Front Door Opened
+        target: media_player.living_room_echo
+        data:
+          type: tts
+  - if:
+    - condition: trigger
+      id: side
+    then:
+    - service: media_player.volume_set
+      data:
+        volume_level: 0.4
+      target:
+        entity_id: media_player.living_room_echo
+    - service: media_player.play_media
+      target:
+        entity_id: media_player.living_room_echo
+      data:
+        media_content_type: sound
+        media_content_id: amzn_sfx_doorbell_chime_02
+    - service: notify.alexa_media
+      data:
+        target: media_player.living_room_echo
+        data:
+          type: tts
+        message: Side Door Opened
+  - if:
+    - condition: trigger
+      id: back
+    then:
+    - service: media_player.volume_set
+      data:
+        volume_level: 0.4
+      target:
+        entity_id: media_player.living_room_echo
+    - service: media_player.play_media
+      target:
+        entity_id: media_player.living_room_echo
+      data:
+        media_content_type: sound
+        media_content_id: amzn_sfx_doorbell_chime_02
+    - service: notify.alexa_media
+      data:
+        target: media_player.living_room_echo
+        data:
+          type: tts
+        message: Back Door Opened
+  - service: media_player.volume_set
+    data:
+      volume_level: '{{ old_volume }}'
+    target:
+      entity_id: media_player.living_room_echo
+  variables:
+    old_volume: '{{ state_attr(''media_player.living_room_echo'' , ''volume_level'')|float
+      }}'
+  mode: single
+- id: '1666976844070'
+  alias: Homekit to device tracker
+  description: ''
+  trigger:
+  - entity_id: input_boolean.james_present
+    platform: state
+  condition: []
+  action:
+  - data_template:
+      dev_id: homekit_{{ trigger.to_state.name }}
+      location_name: '{{ ''home'' if trigger.to_state.state == ''on'' else ''not_home''
+        }}'
+    service: device_tracker.see
+  mode: parallel
+  max: 10
+- id: '1668346946698'
+  alias: LG webOS Smart TV - Turn On Action
+  description: ''
+  use_blueprint:
+    path: cvroque/webostv_turn_on.yaml
+    input:
+      webostv: media_player.office_tv
+      webostv_mac: 40:2F:86:AA:36:E8
+      on_action: []
+      select_action: true
+      custom_action:
+      - service: wake_on_lan.send_magic_packet
+        data:
+          mac: 40:2F:86:AA:36:E8
+          broadcast_address: 192.168.1.182
+- id: '1668730620190'
+  alias: window alerts
+  description: ''
+  trigger:
+  - type: opened
+    platform: device
+    device_id: 0904042db3407b35f0f994ce7d14c677
+    entity_id: binary_sensor.living_room_window_intrusion
+    domain: binary_sensor
+  - type: opened
+    platform: device
+    device_id: 1331eb893cdcfc9e1b6ad6e26ec75000
+    entity_id: binary_sensor.dining_room_window_intrusion
+    domain: binary_sensor
+    id: back
+  condition:
+  - condition: time
+    before: 05:00:00
+    weekday:
+    - sat
+    - fri
+    - thu
+    - wed
+    - tue
+    - mon
+    - sun
+    after: 00:00:00
+    enabled: true
+  action:
+  - service: media_player.volume_set
+    data:
+      volume_level: 1
+    target:
+      entity_id:
+      - media_player.living_room_echo
+      - media_player.kitchen_echo_show
+  - service: notify.alexa_media
+    data:
+      target: media_player.living_room_echo
+      data:
+        type: tts
+      message: WHO THE HECK ARE YOU
+  - repeat:
+      count: 2
+      sequence:
+      - service: notify.alexa_media
+        data:
+          message: CALLING 911!
+          target: media_player.living_room_echo
+          data:
+            type: tts
+  - service: light.turn_on
+    data:
+      brightness_pct: 100
+    target:
+      entity_id:
+      - light.dining_room
+      - light.entrance
+      - light.kitchen_light
+      - light.kitchen_sink_light
+      - light.living_room_1
+      - light.living_room_2
+  - service: switch.turn_on
+    data: {}
+    target:
+      entity_id:
+      - switch.basement
+      - switch.back_yard
+  mode: single
+- id: '1668810460902'
+  alias: trigger backyard light
+  description: ''
+  trigger:
+  - type: opened
+    platform: device
+    device_id: 7f76ae04a6600c07ef67332fa8775b50
+    entity_id: binary_sensor.back_door_sensor_intrusion
+    domain: binary_sensor
+  - type: opened
+    platform: device
+    device_id: 23bd9185bd6cc79d9fe083e4d7460b09
+    entity_id: binary_sensor.fence_gate_driveway_intrusion
+    domain: binary_sensor
+  - type: opened
+    platform: device
+    device_id: 5d4bb12dead00511077c3abf7740f210
+    entity_id: binary_sensor.side_gate_patio_intrusion
+    domain: binary_sensor
+  condition:
+  - condition: sun
+    after: sunset
+    before: sunrise
+  action:
+  - service: switch.turn_on
+    data: {}
+    target:
+      entity_id: switch.back_yard
+  - delay:
+      hours: 0
+      minutes: 15
+      seconds: 0
+      milliseconds: 0
+  - service: switch.turn_off
+    data: {}
+    target:
+      entity_id: switch.back_yard
+  mode: single
+- id: '1668811731601'
+  alias: turn on and off basement light
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.side_door_sensor_intrusion
+    to: 'on'
+    id: outside
+  - platform: state
+    entity_id:
+    - binary_sensor.basement_inside_door_intrusion
+    to: 'on'
+    id: inside
+  condition:
+  - condition: state
+    entity_id: switch.basement
+    state: 'off'
+  action:
+  - service: switch.turn_on
+    data: {}
+    target:
+      entity_id: switch.basement
+  - if:
+    - condition: trigger
+      id: outside
+    then:
+    - wait_for_trigger:
+      - type: opened
+        platform: device
+        device_id: c57db7ddb4d51d49d3c001dbaedf407c
+        entity_id: binary_sensor.basement_inside_door_intrusion
+        domain: binary_sensor
+      timeout:
+        hours: 0
+        minutes: 1
+        seconds: 0
+        milliseconds: 0
+      continue_on_timeout: false
+    - wait_for_trigger:
+      - platform: state
+        entity_id:
+        - binary_sensor.basement_inside_door_intrusion
+        to: 'off'
+    - type: turn_off
+      device_id: 8fc0e31ed858ea99122a82f5876658ff
+      entity_id: switch.basement
+      domain: switch
+  - if:
+    - condition: trigger
+      id: inside
+    then:
+    - wait_for_trigger:
+      - type: opened
+        platform: device
+        device_id: 35aed87fc59cf40f9864e78793fa4958
+        entity_id: binary_sensor.side_door_sensor_intrusion
+        domain: binary_sensor
+        for:
+          hours: 0
+          minutes: 0
+          seconds: 0
+      timeout:
+        hours: 0
+        minutes: 1
+        seconds: 0
+        milliseconds: 0
+      continue_on_timeout: false
+    - wait_for_trigger:
+      - platform: state
+        entity_id:
+        - binary_sensor.side_door_sensor_intrusion
+        to: 'off'
+    - type: turn_off
+      device_id: 8fc0e31ed858ea99122a82f5876658ff
+      entity_id: switch.basement
+      domain: switch
+  mode: single
+- id: '1668811988295'
+  alias: turn basement on
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.basement_inside_door_intrusion
+    to: 'on'
+  condition:
+  - type: is_not_open
+    condition: device
+    device_id: 35aed87fc59cf40f9864e78793fa4958
+    entity_id: binary_sensor.side_door_sensor_intrusion
+    domain: binary_sensor
+  - condition: state
+    entity_id: switch.basement
+    state: 'off'
+  action:
+  - service: switch.turn_on
+    data: {}
+    target:
+      entity_id: switch.basement
+  - delay:
+      hours: 0
+      minutes: 10
+      seconds: 0
+      milliseconds: 0
+  - type: turn_off
+    device_id: 8fc0e31ed858ea99122a82f5876658ff
+    entity_id: switch.basement
+    domain: switch
+  mode: single
+- id: '1668976035572'
+  alias: Monitor the state of an appliance - by leofabri
+  description: ''
+  use_blueprint:
+    path: leofabri/appliance-status-monitor.yaml
+    input:
+      appliance_socket: switch.washing_machine
+      appliance_power_sensor: sensor.washing_machine_current_consumption
+      appliance_state_machine: input_select.washing_machine_state_machine
+      appliance_job_cycle: input_boolean.washing_machine_job_cycle
+      delayed_job_completion_timer: timer.washing_machine_delayed_job_completion_timer
+      automation_self_trigger: input_boolean.washing_machine_automation_self_trigger
+      actions_job_cycle_ends:
+      - service: input_boolean.turn_on
+        data: {}
+        target:
+          entity_id: input_boolean.washing_machine_done
+- id: '1668977172919'
+  alias: washing complete notifaction
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_select.washing_machine_state_machine
+    to: job_completed
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 0
+  condition: []
+  action:
+  - service: notify.mobile_app_james_iphone
+    data:
+      title: "\U0001F455 \U0001F45A"
+      message: Washing Machine Complete!
+  - service: notify.mobile_app_iphone
+    data:
+      title: "\U0001F455 \U0001F45A"
+      message: Washing Machine Complete!
+  mode: single
+- id: '1669165020432'
+  alias: alarm sound
+  description: Send notification when alarm triggered
+  trigger:
+  - platform: state
+    entity_id:
+    - alarm_control_panel.alarmo
+    to: triggered
+  action:
+  - repeat:
+      until:
+      - condition: state
+        entity_id: alarm_control_panel.alarmo
+        state: disarmed
+      sequence:
+      - service: notify.alexa_media
+        data:
+          message: <audio src="soundbank://soundlibrary/scifi/amzn_sfx_scifi_alarm_05"/>
+          data:
+            type: tts
+          target:
+          - media_player.living_room_echo
+          - media_player.kitchen_echo_show
+          - media_player.bedroom_dot
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 5
+          milliseconds: 0
+  mode: single
+- id: '1669578756314'
+  alias: thermostats - OFF
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - climate.downstairs_thermostat
+    - climate.bedroom_thermostat
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+  condition: []
+  action:
+  - service: media_player.play_media
+    data:
+      media_content_type: custom
+      media_content_id: set {{ state_attr(trigger.entity_id, 'friendly_name') }} to
+        off
+    target:
+      entity_id: media_player.kitchen_echo_show
+  mode: queued
+  max: 10
+- id: '1669578787281'
+  alias: thermostats - ON
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - climate.downstairs_thermostat
+    - climate.bedroom_thermostat
+    to: heat
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+  condition: []
+  action:
+  - service: media_player.play_media
+    data:
+      media_content_type: custom
+      media_content_id: Set {{ state_attr(trigger.entity_id, 'friendly_name') }} to
+        heat
+    target:
+      entity_id: media_player.kitchen_echo_show
+  mode: single
+- id: '1669581066359'
+  alias: climate thermostat homekit
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - climate.downstairs_thermostat
+    - climate.bedroom_thermostat
+    attribute: temperature
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+  condition: []
+  action:
+  - service: media_player.play_media
+    data:
+      media_content_type: custom
+      media_content_id: set {{ state_attr(trigger.entity_id, 'friendly_name') }} to
+        {{ state_attr(trigger.entity_id, 'temperature') }}
+    target:
+      entity_id: media_player.kitchen_echo_show
+  mode: single
+- id: '1670241295577'
+  alias: Wallpanel Battery Management
+  description: ''
+  use_blueprint:
+    path: seamus65/wallpanel-battery-management.yaml
+    input:
+      battery: sensor.fire_tablet_battery
+      charger: switch.tablet

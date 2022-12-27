@@ -1,0 +1,10 @@
+xmas:                      
+  custom_fields:           
+    xmas: >                
+      [[[
+        return `<ha-icon
+          icon="mdi:string-lights"       
+          style="width: 25px; height: 25px;">
+          </ha-icon>`                               
+       ]]]           
+                          
